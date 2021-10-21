@@ -83,13 +83,13 @@ BEGIN {
 function handle(name){
     if (pat == "" || match(name, pat)) {
         printf("\033[33m%-12s\t\033[34;1m%s\033[0m\n",   name,        data[name SEP "desc"])
-        printf("%-12s\t%s\n",   " ",         data[name SEP "cmd"])
+        printf("%-12s\t%s\n",   " ",         ">    " data[name SEP "cmd"])
         printf("%-12s\t%s\033[32;3m%s\033[0m\n",   " ",         "ref: ",  data[name SEP "reference"])
         count = count + 1
     }
 }
 
-$0!~/^[\ ]+#/{
+$0!~/^[\ ]*#/{
     leading_space = match($0, /^[\ ]+/)
     leading_space_len = RLENGTH
 
@@ -98,6 +98,7 @@ $0!~/^[\ ]+#/{
             handle(NAME)
         }
         NAME = $0
+        gsub(/:$/, "", NAME)
         gsub(/[\ ]+$/, "", NAME)
         gsub(/^[\ ]+/, "", NAME)
     } else if (leading_space_len == 4) {
@@ -142,10 +143,10 @@ ___x_cmd_install_get(){
     fi
 
     local data
-    data="$(___x_cmd_install_ls "$1")"
+    data="$(___x_cmd_install_ls "^${1:?Provide software name}$")"
     local cmd
     if cmd="$(printf "%s\n" "$data" | awk '
-    $1~/^cmd:/{
+    $1~/^>/{
         $1="";
         cmd=$0;
         count = count + 1;
@@ -156,16 +157,17 @@ ___x_cmd_install_get(){
             gsub(/[\ ]+$/, "", cmd)
             print cmd
             exit(0)
+        } else {
+            exit(1)
         }
-        exit(1)
     }
 ')";
     then
         printf "%s" "$cmd"
         return 0
     else
-        printf "%s" "Found multiple commands" >&2
-        printf "%s" "$data"
+        printf "%s\n--------\n" "Found multiple commands" >&2
+        printf "%s" "$data" >&2
         return 1
     fi
 
