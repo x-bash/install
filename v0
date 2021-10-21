@@ -15,7 +15,7 @@ ___x_cmd_install(){
 SYMPOSIS:
     x install <software>
     x install ls
-    x install <get|run> <software>
+    x install run <software>
 
 SUBCOMMANDS:
     ls          list all software
@@ -28,11 +28,31 @@ A
 }
 
 ___x_cmd_install_run(){
-    local target
-    if target="$(___x_cmd_install_get "${1:?Provide target}")"; then
-        printf "Executing command:\n> \e[32;1m%s\e[0m\n\n" "$target" >&2
-        eval "$target"
-    fi
+    local YES=
+    case "$1" in
+        -y|--yes)       YES=1; shift
+    esac
+
+    for i in "$@"; do
+        local target
+        if target="$(___x_cmd_install_get "${1:?Provide target}")"; then
+            printf "Executing command:\n> \e[32;1m%s\e[0m\n\n" "$target" >&2
+            if [ -n "$YES" ]; then
+                eval "$target"
+            fi
+
+            printf "Do you want to continue? Press y to continue, otherwise will abort: " >&2
+            local ch
+            read -r ch
+            if [ "$ch" = y ]; then
+                eval "$target"
+            else
+                printf "Abort becase received non y\n" >&2
+                return 1
+            fi
+        fi
+        shift
+    done
 }
 
 ___x_cmd_install_which(){
