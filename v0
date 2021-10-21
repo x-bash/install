@@ -36,19 +36,20 @@ ___x_cmd_install_run(){
 }
 
 ___x_cmd_install_which(){
-    local url="https://gitee.com/x-cmd/install/raw/master/index.yml"
+    local url="https://gitee.com/x-cmd/install/raw/main/index.yml"
     if [ "$___X_CMD_IN_CHINA_NET" != 1 ]; then
-        url="https://raw.githubusercontent.com/x-cmd/install/master/index.yml"
+        url="https://raw.githubusercontent.com/x-cmd/install/main/index.yml"
     fi
 
     local CACHE="$___X_CMD_ROOT/.tmp/install/index.yml"
-    ___x_cmd_curl "$url" && printf "%s" "$CACHE" >&2
+    ___x_cmd_curl "$url" && printf "%s" "$CACHE"
 }
 
 ___x_cmd_install_ls(){
     local CACHE
+
     if ! CACHE="$(___x_cmd_install_which)"; then
-        printf "Cannot download file." >&2
+        printf "Cannot download file.\n" >&2
         return 1
     fi
 
@@ -61,23 +62,25 @@ BEGIN {
 }
 
 function handle(name){
-    if (pat == "" || match(pat, name)) {
-        printf("%12s\t%s\n", name,  data[name SEP "desc"])
-        printf("%12s\t%s\n", "",    "cmd:" data[name SEP "cmd"])
-        printf("%12s\t%s\n", "",    "ref:" data[name SEP "reference"])
+    if (pat == "" || match(name, pat)) {
+        printf("\033[33m%-12s\t\033[34;1m%s\033[0m\n",   name,        data[name SEP "desc"])
+        printf("%-12s\t%s\n",   " ",         data[name SEP "cmd"])
+        printf("%-12s\t%s\033[32;3m%s\033[0m\n",   " ",         "ref: ",  data[name SEP "reference"])
         count = count + 1
     }
 }
 
-$0!~/^#/{
+$0!~/^[\ ]+#/{
     leading_space = match($0, /^[\ ]+/)
-    leading_space_len = length(leading_space)
+    leading_space_len = RLENGTH
 
-    if (leading_space_len == 0) {
+    if (leading_space_len == -1) {
         if (NAME != "") {
             handle(NAME)
         }
-        NAME = gsub(/[\ ]+$/, "", $0)
+        NAME = $0
+        gsub(/[\ ]+$/, "", NAME)
+        gsub(/^[\ ]+/, "", NAME)
     } else if (leading_space_len == 4) {
         kw = $1
         if (kw ~ /:$/) {
@@ -85,9 +88,10 @@ $0!~/^#/{
         }
 
         $1 = ""
-        s = gsub(/[\ ]+$/, "", $0)
-        s = gsub(/^[\ ]+/, "", s)
-        data[NAME SEP kw] = $0
+        s = $0
+        gsub(/[\ ]+$/, "", s)
+        gsub(/^[\ ]+/, "", s)
+        data[NAME SEP kw] = s
     }
 }
 
@@ -119,12 +123,18 @@ ___x_cmd_install_get(){
     fi
 
     local data
-    data="$(___x_cmd_install_ls)"
+    data="$(___x_cmd_install_ls "$1")"
     local cmd
-    if cmd="$(awk '
-    $1=="cmd:"{ $1=""; cmd=$0; count = count + 1; }
+    if cmd="$(printf "%s\n" "$data" | awk '
+    $1~/^cmd:/{
+        $1="";
+        cmd=$0;
+        count = count + 1;
+    }
     END{
         if (count == 1) {
+            gsub(/^[\ ]+/, "", cmd)
+            gsub(/[\ ]+$/, "", cmd)
             print cmd
             exit(0)
         }
