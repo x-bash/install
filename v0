@@ -23,62 +23,122 @@ SUBCOMMANDS:
 A
         ;;
         ls)             ___x_cmd_install_ls "$@" ;;
-        get)            ___x_cmd_install_get "$@" ;;
         *)              ___x_cmd_install_run "$subcmd" "$@" ;;
     esac
 }
 
 ___x_cmd_install_run(){
     local target
-    target="$(___x_cmd_install_get "${1:?Provide target}")"
-    printf "Executing command:\n> \e[32;1m%s\e[0m\n\n" "$target" >&2
-    eval "$target"
+    if target="$(___x_cmd_install_get "${1:?Provide target}")"; then
+        printf "Executing command:\n> \e[32;1m%s\e[0m\n\n" "$target" >&2
+        eval "$target"
+    fi
 }
 
-___x_cmd_install_ls(){
-    local CACHE="$___X_CMD_ROOT/.tmp/install/index.yml"
-    ___x_cmd_curl_gitx "x-cmd" "install/index.yml"
-    awk '
-$0!~/^#/{
-    if ($0~/^[\ ]+/) {
-        CODE = CODE "\n" $0
-    } else {
-        res = substr($0, 1, length($0)-1)
-        if (res != "") {
-            print res
-        }
-        CODE = ""
-    }
-}
-' <"$CACHE"
-
-}
-
-___x_cmd_install_get(){
+___x_cmd_install_which(){
     local url="https://gitee.com/x-cmd/install/raw/master/index.yml"
     if [ "$___X_CMD_IN_CHINA_NET" != 1 ]; then
         url="https://raw.githubusercontent.com/x-cmd/install/master/index.yml"
     fi
 
     local CACHE="$___X_CMD_ROOT/.tmp/install/index.yml"
-    ___x_cmd_curl "$url"
+    ___x_cmd_curl "$url" && printf "%s" "$CACHE" >&2
+}
 
-    awk -v target="${1:-Provide target}" '
-$0!~/^#/{
-    if ($0~/^[\ ]+/) {
-        CODE = CODE "\n" substr($0, 5)
-    } else {
-        if (NAME == target) {
-            CODE = substr(CODE, 2)
-            print CODE
-            exit(0)
-        }
+___x_cmd_install_ls(){
+    local CACHE
+    if ! CACHE="$(___x_cmd_install_which)"; then
+        printf "Cannot download file." >&2
+        return 1
+    fi
 
-        NAME = substr($0, 1, length($0)-1)
-        CODE = ""
+    awk -v pat="${1:-""}" '
+BEGIN {
+    NAME = ""
+    WIDTH = 12
+    SEP="\001"
+    count = 0
+}
+
+function handle(name){
+    if (pat == "" || match(pat, name)) {
+        printf("%12s\t%s\n", name,  data[name SEP "desc"])
+        printf("%12s\t%s\n", "",    "cmd:" data[name SEP "cmd"])
+        printf("%12s\t%s\n", "",    "ref:" data[name SEP "reference"])
+        count = count + 1
     }
 }
+
+$0!~/^#/{
+    leading_space = match($0, /^[\ ]+/)
+    leading_space_len = length(leading_space)
+
+    if (leading_space_len == 0) {
+        if (NAME != "") {
+            handle(NAME)
+        }
+        NAME = gsub(/[\ ]+$/, "", $0)
+    } else if (leading_space_len == 4) {
+        kw = $1
+        if (kw ~ /:$/) {
+            gsub(/:$/, "", kw)
+        }
+
+        $1 = ""
+        s = gsub(/[\ ]+$/, "", $0)
+        s = gsub(/^[\ ]+/, "", s)
+        data[NAME SEP kw] = $0
+    }
+}
+
+end{
+    if (NAME != "") {
+        handle(NAME)
+    }
+
+    if (pat != "") {
+        if (count == 0) exit(1)
+        if (count == 1) exit(0)
+        exit(0) # success
+    }
+}
+
 ' <"$CACHE"
+
+}
+
+___x_cmd_install_update(){
+    ___X_CMD_CURL_UPDATE=1 ___x_cmd_install_which 1>/dev/null && printf "Update success.\n" >&2
+}
+
+___x_cmd_install_get(){
+    local CACHE
+    if ! CACHE="$(___x_cmd_install_which)"; then
+        printf "Cannot download file." >&2
+        return 1
+    fi
+
+    local data
+    data="$(___x_cmd_install_ls)"
+    local cmd
+    if cmd="$(awk '
+    $1=="cmd:"{ $1=""; cmd=$0; count = count + 1; }
+    END{
+        if (count == 1) {
+            print cmd
+            exit(0)
+        }
+        exit(1)
+    }
+')";
+    then
+        printf "%s" "$cmd"
+        return 0
+    else
+        printf "%s" "Found multiple commands" >&2
+        printf "%s" "$data"
+        return 1
+    fi
 
 }
 
