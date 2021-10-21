@@ -39,6 +39,7 @@ ___x_cmd_install_run(){
             printf "Executing command:\n> \e[32;1m%s\e[0m\n\n" "$target" >&2
             if [ -n "$YES" ]; then
                 eval "$target"
+                return
             fi
 
             printf "Do you want to continue? Press y to continue, otherwise will abort: " >&2
