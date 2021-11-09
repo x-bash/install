@@ -142,6 +142,20 @@ ___x_cmd_install_update(){
     ___X_CMD_CURL_UPDATE=1 ___x_cmd_install_which 1>/dev/null && printf "Update success.\n" >&2
 }
 
+___x_cmd_install_name(){
+    local CACHE
+    if ! CACHE="$(___x_cmd_install_which)"; then
+        printf "Cannot download file." >&2
+        return 1
+    fi
+    awk '
+$0!~/^[ #]/{
+    printf "%s ", substr($0,1,length($0)-1)
+}
+' <"$CACHE"
+
+}
+
 ___x_cmd_install_get(){
     local CACHE
     if ! CACHE="$(___x_cmd_install_which)"; then
@@ -160,8 +174,8 @@ ___x_cmd_install_get(){
     }
     END{
         if (count == 1) {
-            gsub(/^[\ ]+/, "", cmd)
-            gsub(/[\ ]+$/, "", cmd)
+            gsub(/^[ ]+/, "", cmd)
+            gsub(/[ ]+$/, "", cmd)
             print cmd
             exit(0)
         } else {
@@ -182,15 +196,16 @@ ___x_cmd_install_get(){
 
 # EndSection
 
-# if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
-#     xrc advise
-#     advise install <<A
-# {
-#     "ls": null,
-#     "get": "x install ls",
-#     "update": null,
-#     "run": "x install ls"
-# }
-# A
+if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
+    xrc advise
+    advise install <<A
+{
+    "ls": null,
+    "get": "___x_cmd_install_name",
+    "update": null,
+    "run": "___x_cmd_install_name",
+    "#1": "___x_cmd_install_name"
+}
+A
 
-# fi
+fi
