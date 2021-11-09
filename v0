@@ -96,8 +96,8 @@ function handle(name){
     }
 }
 
-$0!~/^[\ ]*#/{
-    leading_space = match($0, /^[\ ]+/)
+$0!~/^[ ]*#/{
+    leading_space = match($0, /^[ ]+/)
     leading_space_len = RLENGTH
 
     if (leading_space_len == -1) {
@@ -106,8 +106,8 @@ $0!~/^[\ ]*#/{
         }
         NAME = $0
         gsub(/:$/, "", NAME)
-        gsub(/[\ ]+$/, "", NAME)
-        gsub(/^[\ ]+/, "", NAME)
+        gsub(/[ ]+$/, "", NAME)
+        gsub(/^[ ]+/, "", NAME)
     } else if (leading_space_len == 4) {
         kw = $1
         if (kw ~ /:$/) {
@@ -116,8 +116,8 @@ $0!~/^[\ ]*#/{
 
         $1 = ""
         s = $0
-        gsub(/[\ ]+$/, "", s)
-        gsub(/^[\ ]+/, "", s)
+        gsub(/[ ]+$/, "", s)
+        gsub(/^[ ]+/, "", s)
         data[NAME SEP kw] = s
     }
 }
@@ -181,3 +181,16 @@ ___x_cmd_install_get(){
 }
 
 # EndSection
+
+# if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
+#     xrc advise
+#     advise install <<A
+# {
+#     "ls": null,
+#     "get": "x install ls",
+#     "update": null,
+#     "run": "x install ls"
+# }
+# A
+
+# fi
