@@ -209,16 +209,7 @@ ___x_cmd_install_get(){
 
 # EndSection
 
-if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
-    xrc advise
-    advise install <<A
-{
-    "ls": null,
-    "get": "___x_cmd_install_name",
-    "update": null,
-    "run": "___x_cmd_install_name",
-    "#1": "___x_cmd_install_name"
-}
-A
-
-fi
+# if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
+#     xrc advise
+#     advise install
+# fi
