@@ -16,17 +16,21 @@ SYMPOSIS:
     x install <software>
     x install ls
     x install run <software>
+    x install name
 
 SUBCOMMANDS:
     ls          list all software
     get         get software installation command
+    run         run software installation command
     update      update
+    name        get software name list
 A
         ;;
         ls)             ___x_cmd_install_ls "$@" ;;
         get)            ___x_cmd_install_get "$@" ;;
         run)            ___x_cmd_install_run "$@" ;;
         update)         ___x_cmd_install_update "$@" ;;
+        name)           ___x_cmd_install_name "$@" ;;
         *)              ___x_cmd_install_run "$subcmd" "$@" ;;
     esac
 }
@@ -204,12 +208,6 @@ ___x_cmd_install_get(){
         printf "%s" "$data" >&2
         return 1
     fi
-
 }
 
 # EndSection
-
-# if [ -n "$BASH_VERSION$ZSH_VERSION" ] && [ "${-#*i}" != "$-" ]; then
-#     xrc advise
-#     advise install
-# fi
