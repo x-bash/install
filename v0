@@ -151,26 +151,16 @@ ___x_cmd_install_update(){
 }
 
 ___x_cmd_install_name(){
-
-#     local CACHE
-#     if ! CACHE="$(___x_cmd_install_which)"; then
-#         printf "Cannot download file." >&2
-#         return 1
-#     fi
-#     awk '
-# $0!~/^[ #]/{
-#     printf "%s ", substr($0,1,length($0)-1)
-# }
-# ' <"$CACHE"
-
-
-    local CACHE="$___X_CMD_ROOT/.tmp/install/index.yml"
+    local CACHE
+    if ! CACHE="$(___x_cmd_install_which)"; then
+        printf "Cannot download file." >&2
+        return 1
+    fi
     awk '
 $0!~/^[ #]/{
     printf "%s ", substr($0,1,length($0)-1)
 }
-' < "$CACHE"
-
+' <"$CACHE"
 }
 
 ___x_cmd_install_get(){
