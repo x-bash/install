@@ -64,9 +64,8 @@ ___x_cmd_install_run(){
 
 ___x_cmd_install_which(){
     local cache="$___X_CMD_ROOT/.tmp/install/index.yml"
-
-    ___X_CMD_CURL_UPDATE="${___X_CMD_CURL_UPDATE:-1}" \
-        ___x_cmd_curl_gitx x-cmd install main index.yml "$cache" && printf "%s" "$cache"
+    ___x_cmd_curl_gitx x-cmd install main index.yml "$cache" "${___X_CMD_CURL_UPDATE:-1}" \
+        && printf "%s" "$cache"
 }
 
 ___x_cmd_install_ls(){
