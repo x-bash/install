@@ -1,6 +1,6 @@
 # shellcheck shell=sh disable=SC3043 # xrc
 
-# author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
+# author:       Li Junhao           l@x-cmd.com
 # maintainer:   Li Junhao
 
 # Section : install
