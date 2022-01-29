@@ -3,7 +3,6 @@
 # author:       Li Junhao           l@x-cmd.com
 
 # Section : install
-
 xrc param/latest
 
 ___x_cmd_install(){
